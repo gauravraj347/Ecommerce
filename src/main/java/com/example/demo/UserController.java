@@ -14,6 +14,7 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/api/users")
+    //@RequestMapping(value = "api/users", method = RequestMethod.GET)
     public ResponseEntity<List<User>> getAllUser(){
         return new ResponseEntity<>(userService.fetchAllUser(), HttpStatus.OK);
         //return  ResponseEntity.ok(userService.fetchAllUser());
@@ -29,6 +30,14 @@ public class UserController {
         return userService.fetchUser(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(()->ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("api/users/{id}")
+    public ResponseEntity<String> updateUser(@PathVariable Long id,@RequestBody User updatedUser){
+        boolean updated = userService.updatedUser(id, updatedUser);
+        if(updated)
+            return ResponseEntity.ok("Update User Successfully");
+        return ResponseEntity.notFound().build();
     }
 
     @PostMapping("/api/users")
