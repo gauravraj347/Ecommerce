@@ -1,11 +1,12 @@
-package com.example.demo;
+package com.example.demo.controller;
 
+import com.example.demo.model.User;
+import com.example.demo.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
