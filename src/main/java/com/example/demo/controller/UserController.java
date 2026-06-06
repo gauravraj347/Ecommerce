@@ -1,5 +1,7 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.UserRequest;
+import com.example.demo.dto.UserResponse;
 import com.example.demo.model.User;
 import com.example.demo.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -16,13 +18,13 @@ public class UserController {
 
     @GetMapping("/api/users")
     //@RequestMapping(value = "api/users", method = RequestMethod.GET)
-    public ResponseEntity<List<User>> getAllUser(){
+    public ResponseEntity<List<UserResponse>> getAllUser(){
         return new ResponseEntity<>(userService.fetchAllUser(), HttpStatus.OK);
         //return  ResponseEntity.ok(userService.fetchAllUser());
 
     }
-    @GetMapping("api/users/{id}")
-    public ResponseEntity<User> getUser(@PathVariable Long id){
+    @GetMapping("{id}")
+    public ResponseEntity<UserResponse> getUser(@PathVariable Long id){
 //        User user = userService.fetchUser(id);
 //        if(user==null)
 //            return ResponseEntity.notFound().build();
@@ -34,16 +36,16 @@ public class UserController {
     }
 
     @PutMapping("api/users/{id}")
-    public ResponseEntity<String> updateUser(@PathVariable Long id,@RequestBody User updatedUser){
-        boolean updated = userService.updatedUser(id, updatedUser);
+    public ResponseEntity<String> updateUser(@PathVariable Long id,@RequestBody UserRequest updatedUserRequest){
+        boolean updated = userService.updatedUser(id, updatedUserRequest);
         if(updated)
             return ResponseEntity.ok("Update User Successfully");
         return ResponseEntity.notFound().build();
     }
 
     @PostMapping("/api/users")
-    public ResponseEntity<String> createUser(@RequestBody User user ){
-        userService.addUser(user);
+    public ResponseEntity<String> createUser(@RequestBody UserRequest userRequest ){
+        userService.addUser(userRequest);
         return  ResponseEntity.ok("USer added Successfully");
 
     }
