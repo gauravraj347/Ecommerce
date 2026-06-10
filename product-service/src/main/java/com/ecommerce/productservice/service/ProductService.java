@@ -1,8 +1,11 @@
 package com.ecommerce.productservice.service;
 
+import com.ecommerce.productservice.dto.CategoryDto;
 import com.ecommerce.productservice.dto.ProductDto;
+import com.ecommerce.productservice.entity.Category;
 import com.ecommerce.productservice.entity.Product;
 import com.ecommerce.productservice.exception.ResourceNotFoundException;
+import com.ecommerce.productservice.repository.CategoryRepository;
 import com.ecommerce.productservice.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +26,7 @@ import java.util.List;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
     @Transactional
     public ProductDto create(ProductDto request) {
@@ -34,6 +38,7 @@ public class ProductService {
                 .sku(request.getSku())
                 .priceUnit(request.getPriceUnit())
                 .quantity(request.getQuantity())
+                .category(resolveCategory(request.getCategoryId()))
                 .build();
 
         Product saved = productRepository.save(product);
@@ -69,6 +74,7 @@ public class ProductService {
         product.setSku(request.getSku());
         product.setPriceUnit(request.getPriceUnit());
         product.setQuantity(request.getQuantity());
+        product.setCategory(resolveCategory(request.getCategoryId()));
 
         Product saved = productRepository.save(product);
         return toDto(saved);
@@ -83,8 +89,37 @@ public class ProductService {
         productRepository.deleteById(productId);
     }
 
+    /**
+     * Look up the category to attach.
+     *  - null id  -> no category (allowed; a product can be uncategorized)
+     *  - unknown id -> 404 via our global handler
+     */
+    private Category resolveCategory(Integer categoryId) {
+        if (categoryId == null) {
+            return null;
+        }
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Category not found with id: " + categoryId));
+    }
+
     /** Convert an entity into the DTO we expose through the API. */
     private ProductDto toDto(Product product) {
+        Category category = product.getCategory();
+
+        // Null-safe: only build the nested category when the product has one
+        // (the clone always dereferenced category -> NullPointerException).
+        CategoryDto categoryDto = null;
+        Integer categoryId = null;
+        if (category != null) {
+            categoryId = category.getCategoryId();
+            categoryDto = CategoryDto.builder()
+                    .categoryId(category.getCategoryId())
+                    .categoryTitle(category.getCategoryTitle())
+                    .imageUrl(category.getImageUrl())
+                    .build();
+        }
+
         return ProductDto.builder()
                 .productId(product.getProductId())
                 .productTitle(product.getProductTitle())
@@ -92,6 +127,8 @@ public class ProductService {
                 .sku(product.getSku())
                 .priceUnit(product.getPriceUnit())
                 .quantity(product.getQuantity())
+                .categoryId(categoryId)
+                .category(categoryDto)
                 .build();
     }
 }

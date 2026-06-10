@@ -1,5 +1,6 @@
 package com.ecommerce.productservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,4 +31,11 @@ public class ProductDto {
     private String sku;
     private BigDecimal priceUnit;
     private Integer quantity;
+
+    // INPUT: the id of the category to attach to this product (optional).
+    private Integer categoryId;
+
+    // OUTPUT: the attached category's details. Omitted from JSON when null.
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private CategoryDto category;
 }
