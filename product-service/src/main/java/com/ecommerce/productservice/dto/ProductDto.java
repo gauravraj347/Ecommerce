@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 /**
  * Data Transfer Object for Product — the JSON shape the API accepts/returns.
@@ -38,4 +39,8 @@ public class ProductDto {
     // OUTPUT: the attached category's details. Omitted from JSON when null.
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private CategoryDto category;
+
+    // OUTPUT only: audit timestamps (set automatically; ignored on input).
+    private Instant createdAt;
+    private Instant updatedAt;
 }

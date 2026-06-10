@@ -45,6 +45,7 @@ public class CategoryService {
         Category category = Category.builder()
                 .categoryTitle(request.getCategoryTitle())
                 .imageUrl(request.getImageUrl())
+                .parentCategory(resolveParent(request.getParentCategoryId(), null))
                 .build();
 
         Category saved = categoryRepository.save(category);
@@ -92,8 +93,11 @@ public class CategoryService {
 
         category.setCategoryTitle(request.getCategoryTitle());
         category.setImageUrl(request.getImageUrl());
+        category.setParentCategory(resolveParent(request.getParentCategoryId(), categoryId));
 
-        Category saved = categoryRepository.save(category);
+        // saveAndFlush (not save) forces the UPDATE now, so @LastModifiedDate
+        // fires and the returned entity carries the fresh updatedAt.
+        Category saved = categoryRepository.saveAndFlush(category);
         return toDto(saved);
     }
 
@@ -111,12 +115,47 @@ public class CategoryService {
         categoryRepository.deleteById(categoryId);
     }
 
+    /**
+     * Look up the parent category to attach.
+     *  - null id      -> no parent (top-level category)
+     *  - own id        -> illegal (a category cannot be its own parent) -> 400
+     *  - unknown id    -> 404
+     */
+    private Category resolveParent(Integer parentCategoryId, Integer selfId) {
+        if (parentCategoryId == null) {
+            return null;
+        }
+        if (parentCategoryId.equals(selfId)) {
+            throw new IllegalArgumentException(
+                    "A category cannot be its own parent (id: " + selfId + ")");
+        }
+        return categoryRepository.findById(parentCategoryId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Parent category not found with id: " + parentCategoryId));
+    }
+
     /** Convert an entity into the DTO we expose through the API. */
     private CategoryDto toDto(Category category) {
+        Category parent = category.getParentCategory();
         return CategoryDto.builder()
                 .categoryId(category.getCategoryId())
                 .categoryTitle(category.getCategoryTitle())
                 .imageUrl(category.getImageUrl())
+                .parentCategoryId(parent != null ? parent.getCategoryId() : null)
+                .parentCategory(parent != null ? toShallowDto(parent) : null)
+                .createdAt(category.getCreatedAt())
+                .updatedAt(category.getUpdatedAt())
+                .build();
+    }
+
+    /** A parent's details without ITS own parent — keeps the JSON one level deep. */
+    private CategoryDto toShallowDto(Category category) {
+        return CategoryDto.builder()
+                .categoryId(category.getCategoryId())
+                .categoryTitle(category.getCategoryTitle())
+                .imageUrl(category.getImageUrl())
+                .createdAt(category.getCreatedAt())
+                .updatedAt(category.getUpdatedAt())
                 .build();
     }
 }

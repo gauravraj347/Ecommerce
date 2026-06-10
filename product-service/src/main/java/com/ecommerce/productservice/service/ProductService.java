@@ -9,6 +9,8 @@ import com.ecommerce.productservice.repository.CategoryRepository;
 import com.ecommerce.productservice.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,6 +56,17 @@ public class ProductService {
                 .toList();
     }
 
+    /**
+     * Return one "page" of products.
+     * findAll(Pageable) runs a SELECT with LIMIT/OFFSET (and ORDER BY if sorted)
+     * plus a COUNT for totals. .map(...) converts Page<Product> to Page<ProductDto>.
+     */
+    public Page<ProductDto> findPage(Pageable pageable) {
+        log.info("Fetching products page (page={}, size={}, sort={})",
+                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+        return productRepository.findAll(pageable).map(this::toDto);
+    }
+
     public ProductDto findById(Integer productId) {
         log.info("Fetching product with id {}", productId);
         Product product = productRepository.findById(productId)
@@ -76,7 +89,9 @@ public class ProductService {
         product.setQuantity(request.getQuantity());
         product.setCategory(resolveCategory(request.getCategoryId()));
 
-        Product saved = productRepository.save(product);
+        // saveAndFlush (not save) forces the UPDATE now, so @LastModifiedDate
+        // fires and the returned entity carries the fresh updatedAt.
+        Product saved = productRepository.saveAndFlush(product);
         return toDto(saved);
     }
 
@@ -129,6 +144,8 @@ public class ProductService {
                 .quantity(product.getQuantity())
                 .categoryId(categoryId)
                 .category(categoryDto)
+                .createdAt(product.getCreatedAt())
+                .updatedAt(product.getUpdatedAt())
                 .build();
     }
 }

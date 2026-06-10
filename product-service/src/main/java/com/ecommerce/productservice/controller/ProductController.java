@@ -5,6 +5,8 @@ import com.ecommerce.productservice.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -41,6 +43,17 @@ public class ProductController {
     public ResponseEntity<List<ProductDto>> findAll() {
         log.info("GET /api/products");
         return ResponseEntity.ok(productService.findAll());
+    }
+
+    /**
+     * Paged listing, e.g. GET /api/products/paged?page=0&size=10&sort=productTitle,asc
+     * Spring builds the Pageable from those query params automatically
+     * (defaults: page=0, size=20, unsorted).
+     */
+    @GetMapping("/paged")
+    public ResponseEntity<Page<ProductDto>> findPaged(Pageable pageable) {
+        log.info("GET /api/products/paged");
+        return ResponseEntity.ok(productService.findPage(pageable));
     }
 
     @GetMapping("/{productId}")

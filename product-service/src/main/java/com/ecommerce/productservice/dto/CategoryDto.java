@@ -1,11 +1,14 @@
 package com.ecommerce.productservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.Instant;
 
 /**
  * Data Transfer Object for Category.
@@ -33,4 +36,16 @@ public class CategoryDto {
 
     // imageUrl is optional -> no validation.
     private String imageUrl;
+
+    // INPUT: id of the parent category (optional). Null/omitted => top-level.
+    private Integer parentCategoryId;
+
+    // OUTPUT: shallow details of the parent (no further ancestors, to avoid
+    // deep/recursive JSON). Omitted when the category has no parent.
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private CategoryDto parentCategory;
+
+    // OUTPUT only: audit timestamps (set automatically; ignored on input).
+    private Instant createdAt;
+    private Instant updatedAt;
 }
