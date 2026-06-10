@@ -7,6 +7,7 @@ import com.ecommerce.productservice.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,13 +20,15 @@ import java.util.List;
  *                            CategoryRepository. This is "constructor injection",
  *                            the recommended approach (no @Autowired needed).
  *  @Slf4j                 -> gives us a `log` object for logging.
- *
- * We start with just create(). More methods (findAll, findById, update, delete)
- * are added in Step 9 as we build each endpoint, one at a time.
+ *  @Transactional(readOnly = true) at class level -> read methods run in a
+ *                            read-only transaction by default; write methods
+ *                            below override it with a normal @Transactional so
+ *                            their multiple DB operations are atomic.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
@@ -35,6 +38,7 @@ public class CategoryService {
      * Note: we ignore any categoryId sent by the client — the database
      * generates it — so a create always inserts a brand-new row.
      */
+    @Transactional
     public CategoryDto create(CategoryDto request) {
         log.info("Creating category with title '{}'", request.getCategoryTitle());
 
@@ -79,6 +83,7 @@ public class CategoryService {
      * We load the existing row first (so a missing id gives a clear 404 later),
      * then copy the editable fields and save. We deliberately do NOT change the id.
      */
+    @Transactional
     public CategoryDto update(Integer categoryId, CategoryDto request) {
         log.info("Updating category with id {}", categoryId);
         Category category = categoryRepository.findById(categoryId)
@@ -97,6 +102,7 @@ public class CategoryService {
      * We check existence first so a missing id gives a clear "not found"
      * (the clone silently did nothing for unknown ids).
      */
+    @Transactional
     public void deleteById(Integer categoryId) {
         log.info("Deleting category with id {}", categoryId);
         if (!categoryRepository.existsById(categoryId)) {
