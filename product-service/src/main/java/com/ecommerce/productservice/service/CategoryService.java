@@ -74,6 +74,37 @@ public class CategoryService {
         return toDto(category);
     }
 
+    /**
+     * Update an existing category's fields.
+     * We load the existing row first (so a missing id gives a clear 404 later),
+     * then copy the editable fields and save. We deliberately do NOT change the id.
+     */
+    public CategoryDto update(Integer categoryId, CategoryDto request) {
+        log.info("Updating category with id {}", categoryId);
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Category not found with id: " + categoryId));
+
+        category.setCategoryTitle(request.getCategoryTitle());
+        category.setImageUrl(request.getImageUrl());
+
+        Category saved = categoryRepository.save(category);
+        return toDto(saved);
+    }
+
+    /**
+     * Delete a category by id.
+     * We check existence first so a missing id gives a clear "not found"
+     * (the clone silently did nothing for unknown ids).
+     */
+    public void deleteById(Integer categoryId) {
+        log.info("Deleting category with id {}", categoryId);
+        if (!categoryRepository.existsById(categoryId)) {
+            throw new ResourceNotFoundException("Category not found with id: " + categoryId);
+        }
+        categoryRepository.deleteById(categoryId);
+    }
+
     /** Convert an entity into the DTO we expose through the API. */
     private CategoryDto toDto(Category category) {
         return CategoryDto.builder()
