@@ -6,10 +6,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /**
  * REST API for categories.
@@ -43,5 +47,31 @@ public class CategoryController {
         log.info("POST /api/categories");
         CategoryDto created = categoryService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    /**
+     * Endpoint #2: list all categories.
+     *
+     *  @GetMapping -> handles HTTP GET to /api/categories
+     * Returns 200 OK with a JSON array of categories (empty array if none).
+     */
+    @GetMapping
+    public ResponseEntity<List<CategoryDto>> findAll() {
+        log.info("GET /api/categories");
+        return ResponseEntity.ok(categoryService.findAll());
+    }
+
+    /**
+     * Endpoint #3: get one category by id.
+     *
+     *  @GetMapping("/{categoryId}") -> matches e.g. GET /api/categories/1
+     *  @PathVariable               -> binds the {categoryId} URL part to the
+     *                                 method parameter (as an Integer directly,
+     *                                 unlike the clone which used String + parseInt).
+     */
+    @GetMapping("/{categoryId}")
+    public ResponseEntity<CategoryDto> findById(@PathVariable Integer categoryId) {
+        log.info("GET /api/categories/{}", categoryId);
+        return ResponseEntity.ok(categoryService.findById(categoryId));
     }
 }
